@@ -1,0 +1,1688 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>READ · WRITE · SURVIVE</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bangers&family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #080f08;
+  --panel: #0d1f0d;
+  --panel2: #122412;
+  --border: #1e4a1e;
+  --accent: #4caf50;
+  --amber: #ffa726;
+  --red: #f44336;
+  --text: #ddeedd;
+  --subtext: #8ab08a;
+  --gold: #ffd700;
+  --purple: #ce93d8;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Nunito', sans-serif;
+  min-height: 100vh;
+  background-image:
+    radial-gradient(ellipse at 15% 40%, rgba(10, 50, 10, 0.4) 0%, transparent 55%),
+    radial-gradient(ellipse at 85% 20%, rgba(5, 30, 5, 0.5) 0%, transparent 55%);
+}
+
+/* ── HEADER ── */
+#header {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(8,15,8,0.96);
+  backdrop-filter: blur(12px);
+  border-bottom: 2px solid var(--border);
+  padding: 10px 16px;
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+}
+#game-title {
+  font-family: 'Bangers', cursive; font-size: 1.35rem;
+  letter-spacing: 3px; color: var(--gold);
+  text-shadow: 0 0 18px rgba(255,215,0,0.5); flex-shrink: 0;
+}
+.stat { display: flex; align-items: center; gap: 5px; font-size: 0.82rem; font-weight: 700; }
+#hp-wrap { flex:1; min-width:80px; max-width:160px; height:11px; background:rgba(255,255,255,0.08); border-radius:6px; overflow:hidden; }
+#hp-bar { height:100%; border-radius:6px; transition: width 0.5s ease, background 0.5s; }
+#score-val { color: var(--gold); }
+#chapter-display { color: var(--subtext); font-size:0.78rem; margin-left:auto; font-style:italic; }
+
+/* ── MAIN ── */
+#main { max-width: 680px; margin: 0 auto; padding: 22px 16px 80px; }
+
+/* ── SCENE CARD ── */
+.scene-card {
+  background: var(--panel); border: 2px solid var(--border);
+  border-radius: 16px; overflow: hidden; margin-bottom: 20px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+  animation: slideIn 0.35s ease;
+}
+@keyframes slideIn {
+  from { opacity:0; transform:translateY(18px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+.scene-header {
+  background: linear-gradient(135deg, var(--panel2), #142814);
+  padding: 14px 20px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 12px;
+}
+.scene-emoji { font-size: 2rem; }
+.scene-title-wrap { flex:1; }
+.scene-title { font-family:'Bangers',cursive; font-size:1.55rem; letter-spacing:2px; color:var(--gold); text-shadow:0 0 14px rgba(255,215,0,0.4); }
+.scene-chapter { font-size:0.75rem; color:var(--subtext); text-transform:uppercase; letter-spacing:1px; margin-top:1px; }
+.scene-body { padding:20px; font-size:1.05rem; line-height:1.75; }
+.scene-body p { margin-bottom:13px; }
+.scene-body p:last-child { margin-bottom:0; }
+.highlight { color:var(--gold); font-weight:900; }
+
+/* ── VOCAB BOX ── */
+.vocab-box {
+  margin:16px 0; padding:14px 16px;
+  background:rgba(255,215,0,0.07); border:1px solid rgba(255,215,0,0.25);
+  border-radius:10px; border-left:4px solid var(--gold);
+}
+.vocab-word { font-family:'Bangers',cursive; font-size:1.25rem; color:var(--gold); letter-spacing:2px; }
+.vocab-def  { font-size:0.93rem; color:var(--subtext); margin-top:4px; }
+.vocab-example { font-size:0.88rem; color:rgba(255,215,0,0.55); margin-top:3px; font-style:italic; }
+
+/* ── ITEM GAIN ── */
+.item-gain {
+  margin:12px 0; padding:12px 14px;
+  background:rgba(76,175,80,0.09); border:1px solid rgba(76,175,80,0.25);
+  border-radius:10px; border-left:4px solid #4caf50;
+}
+.item-gain-label { font-weight:900; color:#81c784; margin-bottom:5px; font-size:0.9rem; }
+.item-gain-list  { color:var(--subtext); font-size:0.92rem; }
+
+/* ── HP/SCORE CHIPS ── */
+.stat-chip { display:inline-block; padding:2px 9px; border-radius:12px; font-weight:900; font-size:0.85rem; margin-left:8px; }
+.chip-neg  { background:rgba(244,67,54,0.18); color:#f44336; }
+.chip-pos  { background:rgba(76,175,80,0.18); color:#81c784; }
+
+/* ── CHOICES ── */
+.choices-wrap { padding:0 20px 20px; }
+.choices-label { font-size:0.8rem; color:var(--subtext); text-transform:uppercase; letter-spacing:1px; margin-bottom:11px; }
+.choice-btn {
+  width:100%; padding:13px 16px; margin-bottom:9px;
+  border:none; border-radius:12px; cursor:pointer;
+  font-family:'Nunito',sans-serif; font-size:0.97rem; font-weight:700;
+  text-align:left; transition:all 0.2s ease;
+  display:flex; align-items:center; gap:10px;
+}
+.choice-btn:hover { transform:translateY(-2px); }
+.choice-free  { background:linear-gradient(135deg,#1b5e20,#2e7d32); color:#c8e6c9; border:1px solid #388e3c; }
+.choice-free:hover  { box-shadow:0 5px 18px rgba(76,175,80,0.35); }
+.choice-spell { background:linear-gradient(135deg,#bf360c,#e64a19); color:#fbe9e7; border:1px solid #ff5722; }
+.choice-spell:hover { box-shadow:0 5px 18px rgba(255,87,34,0.35); }
+.badge {
+  margin-left:auto; flex-shrink:0; padding:2px 8px; border-radius:8px;
+  font-size:0.75rem; letter-spacing:0.5px; background:rgba(255,255,255,0.15);
+}
+
+/* ── SPELL OVERLAY ── */
+#spell-overlay {
+  display:none; position:fixed; inset:0;
+  background:rgba(0,0,0,0.88); z-index:200;
+  align-items:center; justify-content:center;
+  padding:20px; backdrop-filter:blur(6px);
+}
+#spell-overlay.active { display:flex; }
+.spell-card {
+  background:var(--panel); border:2px solid var(--amber);
+  border-radius:20px; padding:28px; max-width:430px; width:100%;
+  box-shadow:0 0 60px rgba(255,167,38,0.2);
+  animation:popIn 0.28s cubic-bezier(0.175,0.885,0.32,1.275);
+}
+@keyframes popIn {
+  from { opacity:0; transform:scale(0.82); }
+  to   { opacity:1; transform:scale(1); }
+}
+.spell-head  { font-family:'Bangers',cursive; font-size:1.3rem; color:var(--amber); letter-spacing:2px; margin-bottom:6px; }
+.spell-ctx   { font-size:0.88rem; color:var(--subtext); margin-bottom:10px; }
+.spell-target { font-family:'Bangers',cursive; font-size:2.8rem; color:var(--gold); letter-spacing:6px; text-align:center; margin:8px 0 4px; text-shadow:0 0 18px rgba(255,215,0,0.45); }
+.spell-def   { text-align:center; color:var(--subtext); font-size:0.9rem; margin-bottom:18px; font-style:italic; }
+.spell-input {
+  width:100%; background:rgba(255,255,255,0.06);
+  border:2px solid var(--border); border-radius:10px;
+  padding:13px 16px; color:var(--text);
+  font-family:'Bangers',cursive; font-size:1.7rem;
+  letter-spacing:4px; text-align:center; text-transform:uppercase;
+  outline:none; transition:border-color 0.2s;
+}
+.spell-input:focus { border-color:var(--amber); box-shadow:0 0 18px rgba(255,167,38,0.2); }
+.spell-input.correct { border-color:#4caf50; background:rgba(76,175,80,0.1); animation:correctPulse 0.45s ease; }
+.spell-input.wrong   { border-color:#f44336; background:rgba(244,67,54,0.1); animation:wrongShake 0.45s ease; }
+@keyframes correctPulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.02)} }
+@keyframes wrongShake { 0%,100%{transform:translateX(0)} 20%,60%{transform:translateX(-7px)} 40%,80%{transform:translateX(7px)} }
+.spell-tries  { text-align:center; font-size:0.8rem; color:var(--subtext); margin-top:6px; }
+.spell-hint-btn { background:none; border:none; color:var(--subtext); font-family:'Nunito',sans-serif; font-size:0.83rem; cursor:pointer; text-decoration:underline; margin-top:6px; display:block; text-align:center; width:100%; }
+.spell-hint-box { display:none; text-align:center; color:var(--subtext); font-size:0.88rem; margin-top:7px; padding:8px; background:rgba(255,255,255,0.04); border-radius:8px; }
+.spell-result { display:none; text-align:center; padding:12px; border-radius:10px; margin-top:10px; font-weight:700; font-size:0.95rem; }
+.spell-result.show { display:block; }
+.spell-result.ok   { background:rgba(76,175,80,0.14); color:#81c784; border:1px solid #4caf50; }
+.spell-result.bad  { background:rgba(244,67,54,0.14); color:#e57373; border:1px solid #f44336; }
+.spell-submit {
+  width:100%; margin-top:14px; padding:13px;
+  background:linear-gradient(135deg,#e65100,#ffa726);
+  border:none; border-radius:10px; color:#fff;
+  font-family:'Bangers',cursive; font-size:1.25rem; letter-spacing:2px; cursor:pointer; transition:all 0.2s;
+}
+.spell-submit:hover { transform:translateY(-2px); box-shadow:0 6px 18px rgba(255,167,38,0.4); }
+.spell-skip {
+  width:100%; margin-top:8px; padding:10px;
+  background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1);
+  border-radius:8px; color:var(--subtext);
+  font-family:'Nunito',sans-serif; font-size:0.87rem; cursor:pointer;
+}
+
+/* ── DICE OVERLAY ── */
+#dice-overlay {
+  display:none; position:fixed; inset:0;
+  background:rgba(0,0,0,0.84); z-index:200;
+  align-items:center; justify-content:center;
+  flex-direction:column; gap:18px;
+}
+#dice-overlay.active { display:flex; }
+#dice-face { font-size:5.5rem; animation:diceRoll 0.9s ease; }
+@keyframes diceRoll {
+  0%   { transform:rotate(0deg) scale(0.4); opacity:0; }
+  35%  { transform:rotate(200deg) scale(1.2); opacity:1; }
+  65%  { transform:rotate(320deg) scale(0.9); }
+  100% { transform:rotate(360deg) scale(1); }
+}
+#dice-msg { font-family:'Bangers',cursive; font-size:1.5rem; color:var(--gold); letter-spacing:2px; text-align:center; max-width:320px; padding:0 20px; }
+#dice-cont { padding:12px 32px; background:var(--accent); border:none; border-radius:10px; color:#fff; font-family:'Bangers',cursive; font-size:1.15rem; letter-spacing:2px; cursor:pointer; transition:all 0.2s; }
+#dice-cont:hover { transform:translateY(-2px); box-shadow:0 5px 16px rgba(76,175,80,0.4); }
+
+/* ── FLASH ── */
+#flash { display:none; position:fixed; inset:0; z-index:300; align-items:center; justify-content:center; pointer-events:none; }
+#flash.active { display:flex; }
+#flash-text { font-family:'Bangers',cursive; font-size:3.5rem; letter-spacing:4px; animation:flashAnim 1.1s ease forwards; }
+#flash-text.ok  { color:#69f0ae; text-shadow:0 0 28px rgba(105,240,174,0.8); }
+#flash-text.bad { color:#ff5252; text-shadow:0 0 28px rgba(255,82,82,0.8); }
+@keyframes flashAnim {
+  0%   { opacity:0; transform:scale(0.5); }
+  30%  { opacity:1; transform:scale(1.1); }
+  70%  { opacity:1; transform:scale(1); }
+  100% { opacity:0; transform:scale(0.85) translateY(-28px); }
+}
+
+/* ── ENDING ── */
+.ending-wrap { text-align:center; padding:36px 20px; }
+.ending-big-emoji { font-size:4rem; margin-bottom:14px; }
+.ending-title { font-family:'Bangers',cursive; font-size:2.4rem; letter-spacing:4px; margin-bottom:14px; }
+.ending-title.good   { color:var(--gold); text-shadow:0 0 18px rgba(255,215,0,0.5); }
+.ending-title.bad    { color:#f44336; text-shadow:0 0 18px rgba(244,67,54,0.5); }
+.ending-title.secret { color:var(--purple); text-shadow:0 0 18px rgba(206,147,216,0.5); }
+.ending-body { font-size:1.05rem; line-height:1.8; max-width:500px; margin:0 auto 22px; }
+.ending-body p { margin-bottom:14px; }
+.final-score { font-family:'Bangers',cursive; font-size:2rem; color:var(--gold); margin-bottom:20px; }
+.words-panel {
+  background:rgba(255,215,0,0.07); border:1px solid rgba(255,215,0,0.25);
+  border-radius:12px; padding:18px; margin:16px auto 24px; max-width:500px; text-align:left;
+}
+.words-panel h3 { font-family:'Bangers',cursive; font-size:1.15rem; color:var(--gold); letter-spacing:2px; margin-bottom:12px; text-align:center; }
+.word-row { padding:7px 0; border-bottom:1px solid rgba(255,255,255,0.05); display:flex; gap:10px; font-size:0.92rem; flex-wrap:wrap; }
+.word-row:last-child { border-bottom:none; }
+.wr-word { color:var(--gold); font-weight:900; min-width:130px; flex-shrink:0; }
+.wr-def  { color:var(--subtext); }
+.spelled-line { margin:0 auto 16px; max-width:500px; color:var(--subtext); font-size:0.88rem; }
+.spelled-line strong { color:var(--gold); }
+.restart-btn {
+  padding:15px 40px; background:linear-gradient(135deg,#1b5e20,#388e3c);
+  border:2px solid #4caf50; border-radius:12px; color:#fff;
+  font-family:'Bangers',cursive; font-size:1.35rem; letter-spacing:2px; cursor:pointer; transition:all 0.2s;
+}
+.restart-btn:hover { transform:translateY(-3px); box-shadow:0 8px 22px rgba(76,175,80,0.4); }
+
+/* ── RESPONSIVE ── */
+@media (max-width:480px) {
+  .scene-title { font-size:1.25rem; }
+  .scene-body  { font-size:0.95rem; }
+  .spell-target { font-size:2rem; letter-spacing:4px; }
+  #flash-text { font-size:2.4rem; }
+  .ending-title { font-size:1.8rem; }
+}
+</style>
+</head>
+<body>
+
+<div id="header">
+  <div id="game-title">⚡ READ · WRITE · SURVIVE</div>
+  <div class="stat">❤️ <div id="hp-wrap"><div id="hp-bar"></div></div></div>
+  <div class="stat" id="score-val">⭐ 0</div>
+  <div id="chapter-display"></div>
+</div>
+
+<div id="main"><div id="game-area"></div></div>
+
+<!-- Spelling Overlay -->
+<div id="spell-overlay">
+  <div class="spell-card">
+    <div class="spell-head">🔤 SPELLING CHALLENGE!</div>
+    <div class="spell-ctx" id="s-ctx"></div>
+    <div class="spell-target" id="s-word"></div>
+    <div class="spell-def" id="s-def"></div>
+    <input class="spell-input" id="s-input" type="text" placeholder="TYPE IT HERE"
+           autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+    <div class="spell-tries" id="s-tries"></div>
+    <button class="spell-hint-btn" onclick="toggleHint()">💡 Need a hint?</button>
+    <div class="spell-hint-box" id="s-hint"></div>
+    <div class="spell-result" id="s-result"></div>
+    <button class="spell-submit" id="s-btn">SUBMIT ➤</button>
+    <button class="spell-skip" id="s-skip" style="display:none" onclick="skipSpell()">Take the other path instead →</button>
+  </div>
+</div>
+
+<!-- Dice Overlay -->
+<div id="dice-overlay">
+  <div id="dice-face">🎲</div>
+  <div id="dice-msg"></div>
+  <button id="dice-cont">CONTINUE ➤</button>
+</div>
+
+<!-- Flash -->
+<div id="flash"><div id="flash-text"></div></div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// VOCABULARY BANK
+// ═══════════════════════════════════════════════════════════
+const VOCAB = {
+  WRECKAGE:     { def: 'the twisted, broken remains left after a crash or disaster', ex: 'Smoke rose from the wreckage of the plane.' },
+  TREACHEROUS:  { def: 'extremely dangerous, full of hidden risks that are hard to spot', ex: 'The treacherous cliff path crumbled at every step.' },
+  PREDATOR:     { def: 'a creature that hunts and kills other animals to survive', ex: 'The lion is Africa\'s most fearsome predator.' },
+  CAMOUFLAGE:   { def: 'disguising yourself so you blend into your surroundings and can\'t be seen', ex: 'Soldiers use camouflage to hide from the enemy.' },
+  FOLIAGE:      { def: 'the leaves and branches of trees and plants, especially dense ones', ex: 'She hid behind the thick tropical foliage.' },
+  FEROCIOUS:    { def: 'savagely fierce, violent and terrifyingly aggressive', ex: 'The ferocious storm ripped trees from the ground.' },
+  RESOURCEFUL:  { def: 'clever at finding creative solutions using whatever is available', ex: 'He was so resourceful he built a shelter from bamboo and vine.' },
+  NAVIGATE:     { def: 'to plan and follow a route to get from one place to another', ex: 'Using the stars, she could navigate across the ocean.' },
+  LUMINOUS:     { def: 'glowing with bright light, as if producing its own glow from within', ex: 'The luminous mushrooms lit the cave walls in blue.' },
+  VENOMOUS:     { def: 'able to inject poison through a bite or sting — dangerously toxic', ex: 'Never approach a venomous snake in the wild.' },
+  THUNDEROUS:   { def: 'making an enormous, deep sound like a crack of thunder', ex: 'The thunderous roar shook the very ground beneath them.' },
+  EXPEDITION:   { def: 'a journey made for a specific dangerous or exciting purpose', ex: 'The expedition team discovered an uncharted jungle.' },
+  SILHOUETTE:   { def: 'the dark shape or outline of something seen against a bright background', ex: 'She saw the silhouette of a ship on the horizon.' },
+  MAGNIFICENT:  { def: 'impressively beautiful and awe-inspiring, truly spectacular', ex: 'The waterfall was the most magnificent thing he\'d ever seen.' },
+  DESOLATE:     { def: 'completely empty, abandoned and bleakly lifeless', ex: 'The island looked totally desolate — not a person in sight.' },
+  TURBULENT:    { def: 'full of sudden movement, disorder and violent change', ex: 'The turbulent river smashed the raft against the rocks.' },
+  CAUTIOUS:     { def: 'being very careful and aware to avoid danger or making mistakes', ex: 'She was cautious — she checked every step before taking it.' },
+  GLISTENING:   { def: 'shining with reflected light, especially from water or sweat', ex: 'The glistening ocean stretched to the horizon.' },
+  REMNANTS:     { def: 'small pieces or traces of something left behind after most is gone', ex: 'Only the remnants of the ancient camp remained.' },
+  PERILOUS:     { def: 'full of serious and immediate danger — seriously risky', ex: 'Crossing the rope bridge was perilous but their only option.' },
+};
+
+// ═══════════════════════════════════════════════════════════
+// STORY DATA
+// ═══════════════════════════════════════════════════════════
+const NODES = {
+
+  // ── CHAPTER 1: CRASH ──────────────────────────────────────
+  start: {
+    chapter: 'Chapter 1 · The Crash',
+    title: 'CRASH LANDING', emoji: '✈️',
+    text: [
+      'Your plane shudders violently. Through the cracked window you see it — a vast island of dense jungle rushing toward you at terrifying speed. The pilot\'s voice crackles and cuts out mid-sentence.',
+      'BOOM.',
+      'You open your eyes. Smoke rises from the twisted <span class="highlight">WRECKAGE</span> around you. Your ears ring. Through the shattered window, a white sandy beach glitters in the sunlight — and beyond it, a deep blue ocean stretches to the horizon.',
+      'From the dark treeline behind you comes a sound. Deep. Rhythmic. Like something enormous breathing. Something that has smelled the smoke. Something that is coming to investigate.',
+      'You have about sixty seconds. What do you do?',
+    ],
+    vocab: 'WRECKAGE',
+    hpChange: -10,
+    choices: [
+      {
+        text: '🔍 Search the wreckage for supplies first',
+        spell: 'WRECKAGE',
+        spellCtx: 'The twisted WRECKAGE might have useful supplies — but can you spell it?',
+        successNode: 'wreckage_search',
+        failNode:    'beach_arrive',
+        failText:    'You hesitate too long and that breathing gets LOUDER — you bolt for the beach empty-handed!',
+      },
+      {
+        text: '🏃 Sprint straight for the beach',
+        spell: null, dice: true,
+        diceGoodNode: 'beach_arrive', diceBadNode: 'beach_stumble',
+        diceGoodText: 'You burst from the wreckage just as it erupts in flame behind you!',
+        diceBadText:  'You trip on a piece of wing and go face-first into the sand.',
+        diceBadHp: -5, successNode: 'beach_arrive',
+      },
+    ],
+  },
+
+  wreckage_search: {
+    chapter: 'Chapter 1 · The Crash',
+    title: 'GOOD THINKING!', emoji: '🎒',
+    text: [
+      'Covering your mouth against the smoke, you crawl through the twisted metal. Careful of the jagged edges.',
+      'You find: a penknife 🔪, waterproof matches 🔥, a squashed protein bar 🍫, a plastic water bottle 💧, and — brilliantly — a torn but readable map of the island 🗺️.',
+      'The breathing outside is louder now. Much louder. Time to run.',
+    ],
+    itemsGain: ['Penknife 🔪', 'Matches 🔥', 'Protein Bar 🍫', 'Water Bottle 💧', 'Island Map 🗺️'],
+    scoreChange: 20,
+    choices: [{ text: '🏃 Get to the beach — NOW', spell: null, successNode: 'beach_arrive' }],
+  },
+
+  beach_stumble: {
+    chapter: 'Chapter 1 · The Crash',
+    title: 'FACE FULL OF SAND', emoji: '😬',
+    text: [
+      'You spit out a mouthful of gritty sand and push yourself up. Behind you, the plane lets out a massive groan and something very large goes crashing through the treeline toward it.',
+      'You are on the beach. You are alive. You are covered in sand. That\'s good enough for now.',
+    ],
+    hpChange: -5,
+    choices: [{ text: '👀 Look around the beach', spell: null, successNode: 'beach_look' }],
+  },
+
+  beach_arrive: {
+    chapter: 'Chapter 1 · The Crash',
+    title: 'THE BEACH', emoji: '🏖️',
+    text: [
+      'You burst through the treeline onto a wide stretch of blindingly white sand. The ocean pounds the shore in long, rolling waves.',
+      'Far out at sea, you spot something — a dark <span class="highlight">SILHOUETTE</span> against the glistening horizon. A boat? A ship? It\'s hard to tell from here.',
+      'The beach stretches for miles in both directions. To your left, the coastline curves around to tall rocky cliffs. To your right, the beach narrows into a point with a dense cluster of palm trees.',
+      'Behind you — still in the jungle — you hear it again. That breathing. And now: a deep, low rumble that vibrates in your chest.',
+    ],
+    vocab: 'SILHOUETTE',
+    choices: [
+      {
+        text: '🚢 Signal the boat on the horizon',
+        spell: 'SILHOUETTE',
+        spellCtx: 'Identify the SILHOUETTE on the horizon — if you can spell it, you\'ll know exactly where to signal:',
+        successNode: 'signal_good',
+        failNode:    'signal_weak',
+        failText:    'You wave randomly — the boat might have seen you. Or might not.',
+      },
+      {
+        text: '🪨 Hide in the rocks along the cliff',
+        spell: null, successNode: 'cliff_rocks',
+      },
+      {
+        text: '🌴 Head for the palm trees at the point',
+        spell: null, dice: true,
+        diceGoodNode: 'palm_point', diceBadNode: 'trex_sees_you',
+        diceGoodText: 'You sprint down the beach and slip between the palms just in time!',
+        diceBadText:  'You\'ve barely taken three steps when a massive shadow falls over you from behind...',
+        diceBadHp: -15, successNode: 'palm_point',
+      },
+    ],
+  },
+
+  beach_look: {
+    chapter: 'Chapter 1 · The Crash',
+    title: 'TAKING STOCK', emoji: '👀',
+    text: [
+      'The beach stretches for miles. The glistening ocean glitters in the heat. Far out to sea, you can just make out a dark silhouette — could be a boat.',
+      'Behind you, the jungle sounds have gone quiet. Which is somehow worse than the breathing.',
+      'What do you do?',
+    ],
+    vocab: 'GLISTENING',
+    choices: [
+      {
+        text: '🚢 Try to signal the boat',
+        spell: null, successNode: 'signal_weak',
+      },
+      {
+        text: '🪨 Find somewhere to hide and think',
+        spell: null, successNode: 'cliff_rocks',
+      },
+    ],
+  },
+
+  // ── SIGNAL PATH ────────────────────────────────────────────
+  signal_good: {
+    chapter: 'Chapter 2 · Rescue or Run?',
+    title: 'THEY MIGHT SEE YOU!', emoji: '🚢',
+    text: [
+      'You sprint to the shoreline, tearing off your jacket and waving it above your head with both hands. You scream until your throat burns.',
+      'The silhouette on the water slows. Then stops. Someone has spotted you.',
+      'Then the ground beneath your feet begins to shake. A thunderous, rhythmic impact — getting faster. Getting closer.',
+      'A shadow sweeps over the beach as something massive emerges from the treeline behind you.',
+      'The boat is still at least a kilometre out. You have to survive until it reaches you.',
+    ],
+    vocab: 'THUNDEROUS',
+    scoreChange: 15,
+    choices: [
+      {
+        text: '🪨 Hide in the sea rocks and wait',
+        spell: 'CAUTIOUS',
+        spellCtx: 'Staying CAUTIOUS — careful and still — is your best chance. Spell it:',
+        successNode: 'wait_in_rocks',
+        failNode:    'trex_chase_beach',
+        failText:    'You panic and move at the wrong moment — the creature spots you!',
+      },
+      {
+        text: '💨 Run along the beach toward the boat',
+        spell: null, dice: true,
+        diceGoodNode: 'outrun_it',    diceBadNode: 'trex_chase_beach',
+        diceGoodText: 'Your legs find a speed you didn\'t know you had!',
+        diceBadText:  'Your foot sinks in soft sand and you stumble. Behind you — teeth!',
+        diceBadHp: -20, successNode: 'outrun_it',
+      },
+    ],
+  },
+
+  signal_weak: {
+    chapter: 'Chapter 2 · Rescue or Run?',
+    title: 'DID THEY SEE?', emoji: '🤔',
+    text: [
+      'You wave and shout as hard as you can. The shape on the water doesn\'t seem to change course. Maybe they didn\'t see you.',
+      'Behind you, the jungle crashes and shudders. Something very large is moving through it.',
+      'You need a different plan.',
+    ],
+    hpChange: -5,
+    choices: [
+      {
+        text: '🪨 Get to the cliff rocks — quick',
+        spell: null, successNode: 'cliff_rocks',
+      },
+      {
+        text: '🌿 Disappear into the jungle',
+        spell: null, successNode: 'jungle_edge',
+      },
+    ],
+  },
+
+  outrun_it: {
+    chapter: 'Chapter 2 · Rescue or Run?',
+    title: 'FASTEST IN THE WORLD', emoji: '💨',
+    text: [
+      'Your lungs burn. Sand flies from your heels. The roaring behind you is so loud it seems to shake your vision.',
+      'But you are FAST. Faster than you\'ve ever been in your life.',
+      'A small inflatable dinghy is cutting through the surf toward you. Two crew members in orange jackets, arms stretched out.',
+      'You splash into the shallows, they grab you, and haul you into the dinghy.',
+      'You look back. The T-Rex stands at the waterline, staring. It does not follow.',
+      '"Good choice, water," you say, breathing in ragged gasps.',
+    ],
+    hpChange: 10, scoreChange: 40,
+    choices: [{ text: '🚢 Get aboard the rescue ship', spell: null, successNode: 'end_boat' }],
+  },
+
+  wait_in_rocks: {
+    chapter: 'Chapter 2 · Rescue or Run?',
+    title: 'STAYING PERFECTLY STILL', emoji: '🪨',
+    text: [
+      'You wedge yourself into a narrow gap between two boulders and press flat against the cold stone. You slow your breathing. You do not move. Not even a finger.',
+      'The T-Rex passes so close you could reach out and touch its scales. Its eye — the size of a dinner plate — sweeps the beach. Its nostrils flare.',
+      'It snorts. Hot, wet breath washes over the rocks.',
+      'Then, slowly, it turns away.',
+      'You stay still for three more minutes. Just to be completely certain.',
+      'When you finally exhale, you realise you\'ve been holding your breath for a very, very long time.',
+    ],
+    hpChange: 5, scoreChange: 25,
+    choices: [
+      {
+        text: '🚢 Signal the approaching boat from the rocks',
+        spell: null, successNode: 'boat_arrives',
+      },
+      {
+        text: '🌿 Slip into the jungle while it\'s gone',
+        spell: null, successNode: 'jungle_edge',
+      },
+    ],
+  },
+
+  boat_arrives: {
+    chapter: 'Chapter 2 · Rescue or Run?',
+    title: 'THE CREW SPOTS YOU', emoji: '🚤',
+    text: [
+      'The boat — a small but sturdy fishing vessel — drops anchor offshore. A crew member waves from the deck and shouts something in a language you don\'t understand.',
+      'They\'re too far to wade to. The dinghy they\'re lowering will take several minutes.',
+      'Those could be very eventful minutes on an island like this.',
+      'You watch the treeline. You watch the boat. You breathe.',
+    ],
+    choices: [
+      {
+        text: '⏳ Stay hidden and wait quietly',
+        spell: 'PERILOUS',
+        spellCtx: 'This situation is PERILOUS — full of danger at every moment. Spell it to stay focused:',
+        successNode: 'boat_rescue',
+        failNode:    'boat_rescue',
+        failText:    'You fumble the word but manage to stay hidden anyway — it works out!',
+      },
+      {
+        text: '🌊 Wade out to meet the dinghy',
+        spell: null, dice: true,
+        diceGoodNode: 'boat_rescue', diceBadNode: 'boat_rescue',
+        diceGoodText: 'The dinghy crew see you wading and speed toward you!',
+        diceBadText:  'You step in a hidden channel and go under briefly, but the crew haul you up.',
+        diceBadHp: -5, successNode: 'boat_rescue',
+      },
+    ],
+  },
+
+  boat_rescue: {
+    chapter: 'Chapter 2 · Rescue or Run?',
+    title: 'ABOARD!', emoji: '🚢',
+    text: [
+      'The dinghy crew wrap you in a blanket and hand you a hot drink. It is the best thing you have ever tasted.',
+      'As the island shrinks behind you, you try to explain about the T-Rex. Nobody looks entirely convinced.',
+      '"There are no dinosaurs," says the captain, very patiently.',
+      '"The footprints were three metres wide," you say.',
+      'A very long silence.',
+      '"Let\'s get you home," says the captain.',
+    ],
+    scoreChange: 50,
+    choices: [{ text: '🏠 Head home!', spell: null, successNode: 'end_boat' }],
+  },
+
+  trex_chase_beach: {
+    chapter: 'Chapter 2 · Rescue or Run?',
+    title: 'RUN FOR YOUR LIFE!', emoji: '🦖',
+    text: [
+      'The T-Rex is forty feet of muscle, teeth and bad temper. And it is extremely interested in you.',
+      'You run. It chases. Sand flies everywhere. You scream because it seems appropriate.',
+      'You dive sideways as its jaws snap shut where your head was half a second ago. The impact of its foot hitting the sand sends you tumbling.',
+      'You scramble up and bolt for the treeline. The jungle might slow it down. Might.',
+    ],
+    hpChange: -20,
+    choices: [{ text: '🌿 Into the jungle — GO!', spell: null, successNode: 'jungle_edge' }],
+  },
+
+  trex_sees_you: {
+    chapter: 'Chapter 2 · Rescue or Run?',
+    title: 'OH NO.', emoji: '🦖',
+    text: [
+      'A shadow covers you like a cloud passing over the sun. Except it\'s not a cloud.',
+      'You look up. Past the massive scaly legs. Past the belly. Past the tiny, useless arms. Into two small, blinking eyes that have just noticed you.',
+      'The T-Rex tilts its enormous head. It makes a sound you\'ll hear in your nightmares for years. If you survive to have years.',
+      '"Hi," you say. This does not help.',
+    ],
+    hpChange: -20,
+    choices: [
+      {
+        text: '🌿 Use the FOLIAGE to hide',
+        spell: 'FOLIAGE',
+        spellCtx: 'Grab the dense FOLIAGE — leaves, branches — and cover yourself. Spell it:',
+        successNode: 'foliage_hide_success',
+        failNode:    'trex_chase_jungle',
+        failText:    'You drop the leaves and run into the jungle instead!',
+      },
+      {
+        text: '🌴 Climb the nearest palm tree',
+        spell: null, dice: true,
+        diceGoodNode: 'up_the_tree',   diceBadNode: 'trex_chase_jungle',
+        diceGoodText: 'Your hands find the bark and you shinny up before it can react!',
+        diceBadText:  'The bark is too smooth — you slide straight back down. RUN!',
+        diceBadHp: -15, successNode: 'up_the_tree',
+      },
+    ],
+  },
+
+  foliage_hide_success: {
+    chapter: 'Chapter 2 · Rescue or Run?',
+    title: 'HIDDEN IN THE LEAVES', emoji: '🌿',
+    text: [
+      'You press yourself flat into a dense bush, pulling leafy branches over your body until you\'re completely covered. The foliage tickles your nose. You fight the urge to sneeze.',
+      'The T-Rex shuffles past. Its footsteps are like hammer blows on the earth, each one sending sand jumping around you.',
+      'Its nostrils hover a metre from your face. You can see every pore, every scale. It smells of old meat and hot mud.',
+      'Then it moves on.',
+      'You don\'t move for five solid minutes. Just in case.',
+    ],
+    hpChange: 5, scoreChange: 30,
+    choices: [{ text: '🌿 Slip away into the jungle', spell: null, successNode: 'jungle_edge' }],
+  },
+
+  up_the_tree: {
+    chapter: 'Chapter 2 · Rescue or Run?',
+    title: 'UP IN THE PALM', emoji: '🌴',
+    text: [
+      'You\'re twelve feet up the trunk, hugging a palm tree for your life, when the T-Rex lumbers below and stares up at you.',
+      'It is too big to climb. It knows this. It seems irritated by this fact.',
+      'It waits. You wait. You are both extremely stubborn.',
+      'Eventually — after what feels like two days but is probably thirty minutes — it lumbers away, snorting clouds of steam.',
+      'You wait another ten minutes. Then you climb down, very carefully, and head into the jungle before it changes its mind.',
+    ],
+    hpChange: 0, scoreChange: 15,
+    choices: [{ text: '🌿 Head deeper into the jungle', spell: null, successNode: 'jungle_edge' }],
+  },
+
+  // ── CLIFF ROCKS PATH ──────────────────────────────────────
+  cliff_rocks: {
+    chapter: 'Chapter 2 · Into the Unknown',
+    title: 'THE CLIFF ROCKS', emoji: '🪨',
+    text: [
+      'You scramble up the rocky base of the cliff and wedge yourself into a deep crevice. From here you can see the whole beach laid out below you.',
+      'The T-Rex emerges from the trees. It is... larger than you expected. Much larger. Its footprints in the wet sand are the size of paddling pools.',
+      'It sniffs the air. Scans the beach. Heads down toward the waterline.',
+      'You wait until it disappears around the far headland. Then you take a proper look around.',
+      'From this elevated position, you can see the island much better. It\'s shaped roughly like a boot. Far inland, the volcanic mountain dominates everything. At its summit: the glint of metal. A structure of some kind.',
+      'To get there, you\'ll have to go through the jungle.',
+    ],
+    vocab: 'DESOLATE',
+    scoreChange: 10,
+    choices: [
+      {
+        text: '🌿 Descend and enter the jungle',
+        spell: null, successNode: 'jungle_edge',
+      },
+      {
+        text: '⬆️ Climb higher along the cliffs',
+        spell: 'DESOLATE',
+        spellCtx: 'The cliffs above look DESOLATE — empty and bleak. Spell it to see what\'s up there:',
+        successNode: 'cliff_high',
+        failNode:    'jungle_edge',
+        failText:    'The cliff face crumbles and you scramble back down to the beach.',
+      },
+    ],
+  },
+
+  cliff_high: {
+    chapter: 'Chapter 2 · Into the Unknown',
+    title: 'TOP OF THE CLIFFS', emoji: '🏔️',
+    text: [
+      'You haul yourself over the lip of the cliff onto a wide flat ledge. The view from here is magnificent — you can see the entire island laid out like a map.',
+      'And there, carved into the cliff face, partially hidden by centuries of vines and moss: steps. Ancient stone steps leading into a dark passage through the mountain rock.',
+      'Someone was here before. Long ago.',
+    ],
+    scoreChange: 20,
+    choices: [
+      {
+        text: '⛩️ Enter the ancient stone passage',
+        spell: null, successNode: 'ancient_passage',
+      },
+      {
+        text: '🌿 Climb back down and go through the jungle instead',
+        spell: null, successNode: 'jungle_edge',
+      },
+    ],
+  },
+
+  ancient_passage: {
+    chapter: 'Chapter 3 · Ancient Secrets',
+    title: 'THE STONE PASSAGE', emoji: '🕳️',
+    text: [
+      'The passage is narrow and low — you have to crouch. The stone walls are carved with strange symbols: animals, warriors, creatures you don\'t recognise. The air smells of earth and old smoke.',
+      'As you go deeper, the darkness becomes almost complete. Then, ahead, you see it — a faint glow. Blue and shifting, like light on water.',
+      'Luminous crystals are growing from the cave walls, lighting the passage in an eerie, beautiful glow. You\'ve never seen anything like it.',
+      'The passage opens into something that makes your jaw drop.',
+    ],
+    vocab: 'LUMINOUS',
+    choices: [{ text: '👀 See what\'s beyond...', spell: null, successNode: 'ninja_cave' }],
+  },
+
+  // ── JUNGLE PATH ───────────────────────────────────────────
+  jungle_edge: {
+    chapter: 'Chapter 3 · The Jungle',
+    title: 'INTO THE JUNGLE', emoji: '🌿',
+    text: [
+      'The jungle swallows you whole the moment you step off the beach.',
+      'The temperature drops. The air thickens with humidity and the smell of soil and rotting leaves. Dense <span class="highlight">FOLIAGE</span> closes overhead, turning the sky into a dim green patchwork of light and shadow.',
+      'The sounds change completely — birds screech in high-up canopy, insects drone in every direction, and somewhere beneath it all, water moves. Everything feels alive. Everything feels like it might be watching you.',
+      'You check the torn map. The island\'s volcano is roughly north. The structure at the top could be a radio tower — a way to signal for help. But between you and it: miles of this.',
+      'The jungle is going to be treacherous.',
+    ],
+    vocab: 'FOLIAGE',
+    choices: [
+      {
+        text: '🗺️ Navigate using the map',
+        spell: 'NAVIGATE',
+        spellCtx: 'To use the map and compass to NAVIGATE through the jungle, spell the word:',
+        successNode: 'navigate_success',
+        failNode:    'navigate_fail',
+        failText:    'You misread the map and take a wrong turn — losing an hour of daylight.',
+      },
+      {
+        text: '💧 Follow the sound of running water',
+        spell: null, dice: true,
+        diceGoodNode: 'navigate_success', diceBadNode: 'navigate_fail',
+        diceGoodText: 'Smart! The stream leads you exactly the right direction.',
+        diceBadText:  'The stream loops in a circle. You\'ve wasted an hour going nowhere.',
+        diceBadHp: -5, successNode: 'navigate_success',
+      },
+    ],
+  },
+
+  trex_chase_jungle: {
+    chapter: 'Chapter 3 · The Jungle',
+    title: 'JUNGLE CHASE!', emoji: '🦖',
+    text: [
+      'You crash through the jungle with a T-Rex thundering behind you, smashing trees out of the way like they\'re cardboard.',
+      'You weave. You duck. You leap over a log. At one point you dive through a hollow tree trunk — the T-Rex can\'t follow you there and smashes right into it, giving you a precious fifteen-second head start.',
+      'Eventually, gasping and drenched in sweat, you realise the crashing behind you has stopped. You\'ve lost it in the dense undergrowth.',
+      'You collapse against a tree. Your legs shake. Your lungs burn.',
+      'But you\'re alive. And you\'re deep in the jungle.',
+    ],
+    hpChange: -25, scoreChange: 10,
+    choices: [{ text: '💪 Keep going — find that radio tower', spell: null, successNode: 'jungle_deep' }],
+  },
+
+  palm_point: {
+    chapter: 'Chapter 3 · The Jungle',
+    title: 'THE PALM POINT', emoji: '🌴',
+    text: [
+      'The cluster of palms at the beach point turns out to be denser than it looked — almost a small grove, with thick underbrush that would make you very hard to spot.',
+      'You find a freshwater stream trickling between the roots. You drink gratefully.',
+      'From the shade of the palms, you can observe the beach without being seen. The T-Rex stamps down the shoreline, kicking sand. Snorting. Eventually it turns and goes back into the jungle.',
+      'The coast is clear. Time to explore.',
+    ],
+    hpChange: 5, scoreChange: 10,
+    choices: [
+      {
+        text: '🌿 Follow the stream into the jungle',
+        spell: null, successNode: 'jungle_edge',
+      },
+      {
+        text: '🚢 Go back and try to signal the boat',
+        spell: null, successNode: 'signal_weak',
+      },
+    ],
+  },
+
+  navigate_success: {
+    chapter: 'Chapter 3 · The Jungle',
+    title: 'GOOD PROGRESS', emoji: '✅',
+    text: [
+      'Using the map carefully, you find a route that follows the ridgeline above the worst of the jungle floor. It\'s tough going but the path is relatively clear.',
+      'Hours pass. The light shifts and dims as the canopy thickens. Your legs ache. Insects find every gap between your clothes.',
+      'But ahead — through a break in the trees — you can see it. The volcano. And on its slope, the angular shape of a building. Some kind of structure with a long metal antenna rising from the roof.',
+      'A radio tower. A real one.',
+    ],
+    scoreChange: 20,
+    choices: [{ text: '⛰️ Push on toward the radio tower', spell: null, successNode: 'jungle_deep' }],
+  },
+
+  navigate_fail: {
+    chapter: 'Chapter 3 · The Jungle',
+    title: 'WRONG WAY', emoji: '😬',
+    text: [
+      'An hour of walking and you emerge into a clearing you\'ve never seen before. Looking at the map, you\'ve gone southeast instead of north.',
+      'In front of you: a river. Wide, fast, white with foam over rocks. Dangerous-looking.',
+      'On the far bank, a path leads upward into the hillside. The volcano is that way.',
+      'You\'re going to have to cross.',
+    ],
+    hpChange: -5,
+    choices: [{ text: '🌊 Figure out how to cross the river', spell: null, successNode: 'rapids' }],
+  },
+
+  // ── JUNGLE DEEP ───────────────────────────────────────────
+  jungle_deep: {
+    chapter: 'Chapter 3 · The Jungle',
+    title: 'DEEP IN THE JUNGLE', emoji: '🦎',
+    text: [
+      'The deeper you go, the stranger the jungle becomes. Enormous ferns tower over your head. Ancient trees have roots like walls, creating small hidden chambers you could sleep in.',
+      '<span class="highlight">Luminous</span> fungi glow blue and pale violet on the fallen logs — a beautiful, ghostly light in the deep shadow. If you weren\'t trying to survive, this would be genuinely spectacular.',
+      'You stop.',
+      'In the path directly ahead, wound in a languid coil around a low branch at exactly face height: a snake. Its scales shimmer with vivid chevron patterns — bright warning colours.',
+      'You know what bright warning colours on a snake mean. This is a <span class="highlight">VENOMOUS</span> one.',
+      'Your next move needs to be exactly right.',
+    ],
+    vocab: 'VENOMOUS',
+    choices: [
+      {
+        text: '🐍 Back away — very slowly — from the VENOMOUS snake',
+        spell: 'VENOMOUS',
+        spellCtx: 'Knowing what VENOMOUS means could save your life. Spell it:',
+        successNode: 'snake_avoided',
+        failNode:    'snake_bitten',
+        failText:    'You move too quickly — the snake strikes! You feel a sharp sting on your wrist.',
+      },
+      {
+        text: '🌿 Find a way around through the undergrowth',
+        spell: null, dice: true,
+        diceGoodNode: 'snake_avoided', diceBadNode: 'snake_bitten',
+        diceGoodText: 'You spot a gap through the ferns and move around the snake without disturbing it.',
+        diceBadText:  'You step on a second snake hiding in the leaf litter below. It is not happy.',
+        diceBadHp: -20, successNode: 'snake_avoided',
+      },
+    ],
+  },
+
+  snake_avoided: {
+    chapter: 'Chapter 3 · The Jungle',
+    title: 'SMOOTH MOVES', emoji: '😌',
+    text: [
+      'Centimetre by centimetre, you ease backwards. The snake watches you with flat, unreadable eyes. Its tongue flickers in and out, reading the air.',
+      'You are absolutely certain it can hear your heart beating.',
+      'After what feels like an entire lifetime, it loses interest and slides away into the undergrowth with barely a sound.',
+      'You take a long, shaky breath.',
+      'Beyond where the snake was, the ground rises sharply. Ancient stone steps — carved by hand, worn smooth by centuries of rain — lead up through the jungle toward the mountainside.',
+    ],
+    scoreChange: 20,
+    choices: [
+      {
+        text: '⛩️ Climb the ancient stone steps',
+        spell: null, successNode: 'stone_steps',
+      },
+      {
+        text: '⛰️ Keep pushing toward the radio tower',
+        spell: null, successNode: 'mountain_approach',
+      },
+    ],
+  },
+
+  snake_bitten: {
+    chapter: 'Chapter 3 · The Jungle',
+    title: 'OUCH!', emoji: '🤕',
+    text: [
+      'The venom acts fast — your arm throbs and the edges of your vision go slightly swimmy. You press on, stopping only to tie a strip of fabric tightly around the bite to slow the spread.',
+      'It is deeply unpleasant. But the snake was small, and you\'re much bigger than its usual prey. You won\'t die. Probably.',
+      '"Probably" is good enough right now.',
+      'Ahead, ancient stone steps climb the mountainside.',
+    ],
+    hpChange: -25,
+    choices: [
+      {
+        text: '⛩️ Climb the stone steps',
+        spell: null, successNode: 'stone_steps',
+      },
+    ],
+  },
+
+  stone_steps: {
+    chapter: 'Chapter 3 · The Jungle',
+    title: 'THE ANCIENT STEPS', emoji: '⛩️',
+    text: [
+      'The steps are old — so old the jungle is slowly swallowing them. Roots crack through the stone, and moss coats every surface. But they\'re solid, and they lead upward.',
+      'As you climb, the trees thin. The light improves. Your legs burn.',
+      'At the top of the steps, half-hidden by a curtain of hanging vines: a cave entrance. Carved pillars frame the opening. Symbols cover the walls — animals, weapons, hand movements.',
+      'This is not a random cave.',
+    ],
+    scoreChange: 15,
+    choices: [{ text: '⚔️ Step inside the cave', spell: null, successNode: 'ninja_cave' }],
+  },
+
+  // ── NINJA CAVE ────────────────────────────────────────────
+  ninja_cave: {
+    chapter: 'Chapter 4 · The Dojo',
+    title: 'THE NINJA TRAINING DOJO', emoji: '⚔️',
+    text: [
+      'The cave opens into something extraordinary.',
+      'A vast underground chamber, lit by those same luminous crystals in pale blue and green. And filling every wall, every surface, covering every stone: the unmistakable equipment of a ninja training dojo.',
+      'Rope courses over a dark pit. Balance beams no wider than your foot. Throwing star targets — the stars still embedded in the wood after decades. A wall of climbing holds carved into the living rock. A complete weapons rack.',
+      'And above the entrance to the far passage, carved in deep letters: <em>"Stillness is strength. Patience is power. The prepared mind survives everything."</em>',
+      'You feel something shift inside you. Something that recognises this place.',
+    ],
+    vocab: 'LUMINOUS',
+    hpChange: 10, scoreChange: 30,
+    choices: [
+      {
+        text: '🥷 Train in the dojo — master its challenges',
+        spell: 'LUMINOUS',
+        spellCtx: 'The LUMINOUS crystals guide worthy students. Prove you belong — spell the word:',
+        successNode: 'dojo_training',
+        failNode:    'cave_through',
+        failText:    'You trip on the first balance beam and decide to look for another way out.',
+      },
+      {
+        text: '🚶 Find the passage through the mountain',
+        spell: null, successNode: 'cave_through',
+      },
+    ],
+  },
+
+  dojo_training: {
+    chapter: 'Chapter 4 · The Dojo',
+    title: 'TRAINING MONTAGE', emoji: '🥷',
+    text: [
+      'The rope course tests your grip and balance — you fall twice, swinging above the black pit, clinging on through sheer stubbornness.',
+      'The balance beams teach you how to move your weight slowly, deliberately, one careful step at a time.',
+      'The throwing stars — after you figure out the angle — start hitting the targets with a deeply satisfying thunk.',
+      'By the time you reach the far end of the dojo, your hands are scratched and your arms tremble — but you move differently. Quieter. More aware. Like the jungle itself is something you now understand.',
+      'The far passage glows with a faint light from outside. Beyond it: open air.',
+    ],
+    hpChange: 20, scoreChange: 60,
+    choices: [{ text: '🌟 Exit through the far passage', spell: null, successNode: 'mountain_exit' }],
+  },
+
+  cave_through: {
+    chapter: 'Chapter 4 · The Dojo',
+    title: 'THROUGH THE MOUNTAIN', emoji: '🕳️',
+    text: [
+      'The passage twists and turns through the rock. In places you have to squeeze sideways. In others, it opens briefly into small caverns where the luminous crystals cast their strange blue light on ancient carvings.',
+      'You move through carefully, following air currents toward the outside — a survival trick you\'ve seen Bear Grylls use. Fresh air flows toward exits.',
+      'After twenty minutes of careful progress, the passage ends in a blaze of golden light.',
+    ],
+    scoreChange: 20,
+    choices: [{ text: '☀️ Step out into the light', spell: null, successNode: 'mountain_exit' }],
+  },
+
+  mountain_exit: {
+    chapter: 'Chapter 4 · The Far Side',
+    title: 'THE OTHER SIDE', emoji: '🌄',
+    text: [
+      'You step out onto a narrow ledge on the far side of the mountain and catch your breath.',
+      'The view is magnificent — the most magnificent thing you have ever seen. The island spreads below you in every direction. On this side, the landscape is completely different — gentler slopes, and at the base of the mountain, a small harbour. Fishing boats at anchor. And beyond them, lights from what looks like a small village.',
+      'Home. Civilisation. People.',
+      'But between you and the harbour, the slope descends through rough terrain and — you can see even from here — the river.',
+      'You need to get down.',
+    ],
+    vocab: 'MAGNIFICENT',
+    scoreChange: 25,
+    choices: [
+      {
+        text: '⛰️ Descend carefully — you can see a path',
+        spell: 'MAGNIFICENT',
+        spellCtx: 'This MAGNIFICENT view — spell it to honour what you\'re seeing and keep a clear head:',
+        successNode: 'descent_good',
+        failNode:    'descent_rough',
+        failText:    'You start down but the path is harder than it looked.',
+      },
+      {
+        text: '🔍 Look for the radio tower first',
+        spell: null, successNode: 'radio_tower',
+      },
+    ],
+  },
+
+  descent_good: {
+    chapter: 'Chapter 4 · The Far Side',
+    title: 'MAKING IT DOWN', emoji: '🏔️',
+    text: [
+      'The descent is slow but steady. You find a goat trail — literally worn by small animals — that zigzags down the most difficult sections.',
+      'Your legs shake on the steeper parts. You use the penknife to cut a walking stick. Smart.',
+      'As the gradient eases and the trees thicken again, you can hear the river — and the village beyond it.',
+    ],
+    scoreChange: 15,
+    choices: [{ text: '🌊 Cross the river to the village', spell: null, successNode: 'village_approach' }],
+  },
+
+  descent_rough: {
+    chapter: 'Chapter 4 · The Far Side',
+    title: 'ROUGH DESCENT', emoji: '😬',
+    text: [
+      'The slope is loose shale and your feet slide with every step. You fall twice, skidding several metres on your hands and knees before stopping yourself.',
+      'Eventually you reach the bottom, dusty and scraped, but in one piece.',
+      'The river is ahead. The village beyond.',
+    ],
+    hpChange: -10,
+    choices: [{ text: '🌊 Cross the river', spell: null, successNode: 'village_approach' }],
+  },
+
+  village_approach: {
+    chapter: 'Chapter 4 · The Far Side',
+    title: 'SO CLOSE', emoji: '🏘️',
+    text: [
+      'The river crossing is nerve-wracking but manageable — a line of stepping stones just visible beneath the surface. You pick your way across, arms out for balance, not looking down.',
+      'And then: a path. A proper, worn path. And the smell of cooking.',
+      'You follow it around a bend in the hillside and there it is — a fishing village. Twelve houses. A small dock. Two boats.',
+      'A child sees you first and stares with enormous eyes. Then she runs, shouting.',
+      'People come out of doors. Someone hands you water. Someone else runs for a telephone.',
+      'You\'ve done it.',
+    ],
+    scoreChange: 40,
+    choices: [{ text: '🏠 You\'re safe — see how it ends!', spell: null, successNode: 'end_village' }],
+  },
+
+  mountain_approach: {
+    chapter: 'Chapter 3 · The Jungle',
+    title: 'THE MOUNTAIN', emoji: '⛰️',
+    text: [
+      'The slope steepens. The jungle changes character — the trees are shorter here, the undergrowth wilder. Volcanic rock pushes through the soil in great grey slabs.',
+      'Your legs burn. You stop to eat the last of your supplies and rest against a boulder.',
+      'Above you, barely visible through cloud, the antenna of the radio tower pokes at the sky.',
+      'One more push.',
+    ],
+    hpChange: -5,
+    choices: [{ text: '📡 Push up to the radio tower', spell: null, successNode: 'radio_tower' }],
+  },
+
+  // ── RAPIDS PATH ───────────────────────────────────────────
+  rapids: {
+    chapter: 'Chapter 3 · The River',
+    title: 'THE RAPIDS', emoji: '🌊',
+    text: [
+      'The river is <span class="highlight">TURBULENT</span> — and that\'s putting it kindly.',
+      'It boils white over black rocks, surging and crashing with terrifying force. You throw in a stick and watch it spin and vanish downstream in seconds. You would not survive in that water.',
+      'Upstream, the banks narrow and two trees have fallen across the gap, forming a rough bridge. It would be a treacherous crossing but possible.',
+      'Downstream, a logjam of driftwood has collected behind a boulder — enough to build a raft if you had the time and knew what you were doing.',
+      'A third option: the far bank curves outward into a shallow gravel beach. If you can get to it somehow.',
+    ],
+    vocab: 'TURBULENT',
+    choices: [
+      {
+        text: '🌉 Cross on the fallen tree-bridge',
+        spell: 'TREACHEROUS',
+        spellCtx: 'It\'s a TREACHEROUS crossing — spell the word to prepare for the danger ahead:',
+        successNode: 'tree_bridge',
+        failNode:    'tree_bridge_slip',
+        failText:    'You step onto the log without thinking it through and immediately slip!',
+      },
+      {
+        text: '🛶 Build a raft from the driftwood',
+        spell: 'RESOURCEFUL',
+        spellCtx: 'Being RESOURCEFUL means building what you need from what\'s there. Spell it:',
+        successNode: 'raft_built',
+        failNode:    'raft_wonky',
+        failText:    'Your raft is... less impressive than planned. But it floats. Kind of.',
+      },
+      {
+        text: '🏊 Try to wade across at the gravel beach',
+        spell: null, dice: true,
+        diceGoodNode: 'wade_success', diceBadNode: 'swept_away',
+        diceGoodText: 'The shallows are just manageable — you make it across, soaked but safe!',
+        diceBadText:  'The current is stronger than it looked. It pulls you off your feet!',
+        diceBadHp: -25, successNode: 'wade_success',
+      },
+    ],
+  },
+
+  tree_bridge: {
+    chapter: 'Chapter 3 · The River',
+    title: 'THE LOG CROSSING', emoji: '🌉',
+    text: [
+      'You step onto the first fallen log and immediately understand that this is going to require everything you have.',
+      'The wood is wet and mossy. The spray from the rapids below makes it slick. The logs shift slightly under your weight.',
+      'You take it one step at a time. Arms out. Eyes forward. Breathing slow and steady.',
+      'Don\'t look down.',
+      'Don\'t look down.',
+      'You look down. Immediately regret it. The white water is five metres below, smashing over rocks.',
+      'You take another step. And another. And then — the far bank. You step onto solid ground, legs trembling like jelly.',
+      'You\'ve crossed the treacherous rapids.',
+    ],
+    hpChange: -5, scoreChange: 30,
+    choices: [{ text: '⛰️ Head for the mountain', spell: null, successNode: 'mountain_approach' }],
+  },
+
+  tree_bridge_slip: {
+    chapter: 'Chapter 3 · The River',
+    title: 'SLIPPING!', emoji: '💦',
+    text: [
+      'Your foot goes out from under you on the mossy log. You throw yourself sideways and grab the trunk with both arms, dangling over the roaring water.',
+      'For one heart-stopping moment you hold on with nothing but arm strength and pure determination.',
+      'Then you haul yourself back up, crawl the rest of the way on hands and knees, and roll onto the far bank.',
+      'Not dignified. But you\'re across.',
+    ],
+    hpChange: -15, scoreChange: 15,
+    choices: [{ text: '⛰️ Onward to the mountain', spell: null, successNode: 'mountain_approach' }],
+  },
+
+  raft_built: {
+    chapter: 'Chapter 3 · The River',
+    title: 'A PROPER RAFT!', emoji: '🛶',
+    text: [
+      'It takes an hour of hard work — lashing logs with vine, testing each joint, building a flat deck wide enough to stand on. When you\'re done, you push it into the current.',
+      'It holds. It actually holds.',
+      'Using a long bamboo pole to steer and push, you nose across the river. The current pushes you sideways but the raft is solid enough to fight it.',
+      'You ground on the far bank and step ashore dry. That might be the most satisfying thing that has happened today.',
+    ],
+    scoreChange: 35,
+    choices: [{ text: '⛰️ Head for the mountain', spell: null, successNode: 'mountain_approach' }],
+  },
+
+  raft_wonky: {
+    chapter: 'Chapter 3 · The River',
+    title: 'WONKY RAFT', emoji: '💦',
+    text: [
+      'Your raft lists dramatically to the left and takes on water with enthusiasm. You pole across anyway, sitting in six inches of river water, bailing constantly with cupped hands.',
+      'You reach the far bank soaked to the skin but across. Technically a success.',
+    ],
+    hpChange: -10, scoreChange: 15,
+    choices: [{ text: '⛰️ Squelch toward the mountain', spell: null, successNode: 'mountain_approach' }],
+  },
+
+  wade_success: {
+    chapter: 'Chapter 3 · The River',
+    title: 'ACROSS!', emoji: '✅',
+    text: [
+      'You pick your way across the gravel shallows with arms spread wide for balance. The current tugs at your ankles and knees but never quite takes your feet off the ground.',
+      'Cold, wet, but across. Good enough.',
+    ],
+    scoreChange: 15,
+    choices: [{ text: '⛰️ Head for the mountain', spell: null, successNode: 'mountain_approach' }],
+  },
+
+  swept_away: {
+    chapter: 'Chapter 3 · The River',
+    title: 'SWEPT DOWNSTREAM!', emoji: '🌊',
+    text: [
+      'The current takes you like a toy. You tumble over rocks, swallow lungfuls of freezing water, spin in eddies.',
+      'Then — hard gravel under your hands. You drag yourself out at the river mouth where it meets the sea.',
+      'You lie there for several minutes, coughing, staring at the sky, having a quiet word with yourself about risk assessment.',
+      'On the bright side: the ocean is right here. And there\'s a boat anchored offshore.',
+    ],
+    hpChange: -30,
+    choices: [
+      {
+        text: '🚢 Swim to the boat',
+        spell: null, dice: true,
+        diceGoodNode: 'end_boat', diceBadNode: 'end_ocean',
+        diceGoodText: 'You make it to the boat! The crew hauls you aboard!',
+        diceBadText:  'The current is still against you. It carries you slowly out to sea...',
+        successNode: 'end_boat',
+      },
+    ],
+  },
+
+  // ── RADIO TOWER ───────────────────────────────────────────
+  radio_tower: {
+    chapter: 'Chapter 5 · The Radio Tower',
+    title: 'THE RADIO TOWER', emoji: '📡',
+    text: [
+      'The building is small — two rooms of cracked concrete, smothered in moss. But inside, behind a rusted door that takes your full weight to open, the radio equipment is intact.',
+      'Rows of dials and switches. A large transmitter. A desk covered in old logbooks.',
+      'You\'ve seen enough of Bear Grylls to know what you\'re looking at. And you\'ve spent your whole life reaching this moment without knowing it.',
+      'The remnants of an old generator sit in the corner. It will need fuel. Outside, behind the building, three rusted fuel cans sit in a rack.',
+      'This has been your own personal <span class="highlight">EXPEDITION</span>. Time to end it.',
+    ],
+    vocab: 'EXPEDITION',
+    hpChange: 5, scoreChange: 30,
+    choices: [
+      {
+        text: '📡 Get the radio working — call for rescue',
+        spell: 'EXPEDITION',
+        spellCtx: 'This EXPEDITION ends with one radio call. Spell the word to power up the transmitter:',
+        successNode: 'radio_works',
+        failNode:    'radio_partial',
+        failText:    'You fumble the controls but manage to get a partial signal out.',
+      },
+      {
+        text: '🔧 Figure out the equipment by exploring it',
+        spell: null, dice: true,
+        diceGoodNode: 'radio_works',   diceBadNode: 'radio_partial',
+        diceGoodText: 'The controls make sense — you get it working!',
+        diceBadText:  'You accidentally broadcast the entire sequence of button presses... but a signal is a signal.',
+        successNode: 'radio_works',
+      },
+    ],
+  },
+
+  radio_works: {
+    chapter: 'Chapter 5 · The Radio Tower',
+    title: 'SIGNAL SENT!', emoji: '🚁',
+    text: [
+      'The generator coughs, shudders, and hums. The transmitter crackles to life.',
+      'You click the handset. "Mayday, mayday. Crash survivor. I\'m at a radio station on the island. I need rescue."',
+      'Static. More static. Then — a voice. Clear. Human. Speaking your language.',
+      '"Received. We have your location. Coast Guard helicopter is being launched. Stay at the transmitter. Estimated arrival — forty minutes."',
+      'You sit in the old wooden chair and let out a breath you feel like you\'ve been holding for hours.',
+      '"Forty minutes," you say to the empty room. "I\'ve survived worse today."',
+    ],
+    scoreChange: 50,
+    choices: [{ text: '🚁 Wait for the helicopter!', spell: null, successNode: 'end_helicopter' }],
+  },
+
+  radio_partial: {
+    chapter: 'Chapter 5 · The Radio Tower',
+    title: 'PARTIAL SIGNAL', emoji: '📻',
+    text: [
+      'The transmitter sparks. You manage a location ping — not a voice signal, but enough to broadcast your GPS coordinates.',
+      'You settle in to wait, eating the last of your supplies.',
+      'Four hours later, as the sun goes down and the jungle outside starts making its evening noises, the distant thudding of a helicopter reaches you through the walls.',
+      'Then a searchlight sweeps through the window.',
+    ],
+    scoreChange: 25,
+    choices: [{ text: '🚁 Signal the helicopter!', spell: null, successNode: 'end_helicopter' }],
+  },
+
+  // ══════════════════════════════════════════════════════════
+  // ENDINGS
+  // ══════════════════════════════════════════════════════════
+  end_helicopter: {
+    isEnding: true, type: 'good',
+    title: 'AIRLIFTED TO SAFETY!', emoji: '🚁',
+    text: `The helicopter sets down on the flat area beside the radio building. Two crew in orange suits come running toward you with a first aid kit and a blanket.
+
+"Are you okay? How long have you been here? Have you eaten anything? Are you hurt?"
+
+You take a long, slow breath of non-jungle, non-dinosaur-adjacent air.
+
+"I'm fine," you say. "I used my skills. I navigated the jungle. I avoided the predators. I was cautious and resourceful with my supplies. I built things, found things, and survived things. And I used the radio."
+
+The crew look at each other.
+
+"...Predators? Plural?"
+
+"The T-Rex. And the venomous snake. The treacherous rapids as well. And the ninja dojo, which was brilliant actually."
+
+A very long silence.
+
+"The important thing," says the paramedic carefully, "is that you're safe."
+
+As the helicopter rises above the jungle canopy and the island shrinks below you — magnificent, terrible, luminous in the setting sun — you realise something.
+
+Every single thing you knew, every word you learned, every skill you used: it all meant something today. Reading the map. Knowing what the words meant. Staying cautious. Being resourceful.
+
+Knowledge isn't just for school.
+
+Knowledge keeps you alive.`,
+    scoreBonus: 100,
+  },
+
+  end_boat: {
+    isEnding: true, type: 'good',
+    title: 'RESCUED BY BOAT!', emoji: '🚢',
+    text: `The fishing boat crew wrap you in a blanket that smells magnificently of fish. Someone hands you hot soup that tastes like the best thing ever made by human hands.
+
+"We saw you on the beach," the captain says. "Waving. Very... energetically."
+
+"I had to be energetic," you say. "There was a T-Rex."
+
+The captain nods slowly in the way people nod when they've decided to be polite.
+
+As the island disappears behind the horizon, you replay everything — the wreckage, the predator, the ferocious chase, the treacherous beach. You stayed cautious when you needed to. You were resourceful when you had nothing. You read the signs around you and made decisions based on what you knew.
+
+And you got out.
+
+Survival isn't about being the strongest, or the biggest, or the loudest.
+
+It's about being the most prepared. The most observant. The most capable of reading your situation and finding the word — the exact right word — for what you need to do next.
+
+That was you today. All of it.`,
+    scoreBonus: 80,
+  },
+
+  end_village: {
+    isEnding: true, type: 'good',
+    title: 'FOUND BY THE VILLAGE!', emoji: '🏘️',
+    text: `Within an hour, you're sitting in a warm kitchen eating fish stew while someone's grandmother tuts at your scrapes and applies something that stings considerably.
+
+Through a translator on someone's phone, you try to explain what happened.
+
+The dinosaur part gets skipped. Some things are between you and the island.
+
+By nightfall, a coastguard vessel has arrived and a very relieved-looking adult is waiting at the dock with approximately ten thousand questions and a thermos flask of tea.
+
+"How did you do it?" they ask, as you walk up the gangplank.
+
+You think about it properly.
+
+"I read everything carefully. The map. The signs. I paid attention to what words meant — venomous, treacherous, luminous, predator — because those words told me exactly what to do. I stayed cautious when I needed to. I was resourceful when I had nothing. I navigated when I was lost."
+
+A pause.
+
+"Also there was a ninja dojo in a mountain, but that's a longer story."
+
+On the boat home, you sleep better than you've ever slept in your life.`,
+    scoreBonus: 90,
+  },
+
+  end_ninja: {
+    isEnding: true, type: 'secret',
+    title: '🥷 SECRET NINJA ENDING!', emoji: '⚔️',
+    text: `You emerge from the cave system onto a ledge bathed in golden evening light. The ocean spreads below you in every direction. Distant islands shimmer on the horizon.
+
+But you don't feel like a rescued survivor.
+
+You feel like something else entirely.
+
+The dojo changed you. You move differently — quieter, more deliberate, more aware. Every sense feels sharpened. You notice things you wouldn't have noticed this morning: the angle of shadows, the direction of wind, the way the birds go silent before something large moves through the undergrowth.
+
+When you reach the village below, the fishermen look at you strangely. Something about the way you carry yourself.
+
+One very old man, who has lived on the island his whole life, nods slowly when he sees you.
+
+"You found the old place," he says, in perfect English. "Not many do."
+
+"The dojo," you say.
+
+He nods again. "My grandfather's grandfather's grandfather built it. We thought it was lost."
+
+You look back at the mountain.
+
+"It's not lost," you say. "It was waiting."
+
+🥷 ULTRA SECRET ENDING UNLOCKED — You didn't just survive. You levelled up. 🥷`,
+    scoreBonus: 150,
+  },
+
+  end_eaten: {
+    isEnding: true, type: 'bad',
+    title: 'CHOMPED.', emoji: '🦖',
+    text: `Well.
+
+That could have gone better.
+
+The T-Rex looks extremely pleased with itself. It's doing what can only be described as a small victory shuffle, which is impressive given the size of its legs and the uselessness of its arms.
+
+You are now a footnote in the island's history — "the small human who arrived on a Tuesday and did not leave on a Tuesday."
+
+The good news is that this is a game, and you can try again.
+
+And this time? You know more. You know what wreckage means, and predator, and venomous, and treacherous. You know to be cautious. You know to be resourceful. You know to read the signs around you.
+
+Every single word in this adventure is a survival tool. The more words you know, the better your chances.
+
+Next time, you won't become Gerald's Tuesday lunch.
+
+...Probably.
+
+👾 GAME OVER — Press RESTART to try again! You'll do better!`,
+    scoreBonus: 0,
+  },
+
+  end_ocean: {
+    isEnding: true, type: 'bad',
+    title: 'ADRIFT AT SEA...', emoji: '🌊',
+    text: `You are floating in the ocean.
+
+This is not the intended outcome.
+
+The island is behind you, getting smaller. On the beach, the T-Rex watches you go. Even it seems a bit concerned.
+
+Some dolphins appear. They nudge you thoughtfully.
+
+"I know," you tell them.
+
+The ocean is very large. You are very small. You've come quite far for someone who started the day on a plane. The problem is the direction of travel, which is currently "away from land" rather than "toward safety."
+
+On the bright side: the sunrise from out here is genuinely magnificent.
+
+The dolphins, clearly having made a decision, nudge you more firmly. They want you to go back to the island and try the radio tower. You can tell.
+
+They're very wise, dolphins.
+
+Press RESTART and this time — navigate toward the mountain. There's a radio tower up there. You can do this.
+
+👾 GAME OVER — The dolphins believe in you!`,
+    scoreBonus: 0,
+  },
+};
+
+// ═══════════════════════════════════════════════════════════
+// GAME STATE
+// ═══════════════════════════════════════════════════════════
+const G = {
+  hp: 100, score: 0,
+  items: [], node: 'start',
+  wordsLearned: [],    // { word, def }
+  wordsSpelled: [],    // word strings
+  spellTries: 0,
+};
+
+// Pending spell data
+let PS = {};
+
+// ─── UI helpers ────────────────────────────────────────────
+function $(id) { return document.getElementById(id); }
+
+function updateHUD() {
+  const hp = Math.max(0, G.hp);
+  const pct = hp + '%';
+  const bar = $('hp-bar');
+  bar.style.width = pct;
+  // Green → amber → red
+  const h = Math.round(120 * (hp / 100)); // 120 = green, 0 = red
+  bar.style.background = `hsl(${h},70%,40%)`;
+  $('score-val').textContent = '⭐ ' + G.score;
+}
+
+function flash(text, type) {
+  $('flash-text').textContent = text;
+  $('flash-text').className = type;
+  $('flash').classList.add('active');
+  setTimeout(() => $('flash').classList.remove('active'), 1100);
+}
+
+// ─── MAIN NAVIGATION ───────────────────────────────────────
+function go(nodeId) {
+  const node = NODES[nodeId];
+  if (!node) { console.error('Missing node:', nodeId); return; }
+  G.node = nodeId;
+
+  // Apply changes
+  if (node.hpChange) {
+    G.hp = Math.min(100, G.hp + node.hpChange);
+    if (node.hpChange < 0) flash(node.hpChange + ' HP', 'bad');
+    if (node.hpChange > 0) flash('+' + node.hpChange + ' HP!', 'ok');
+  }
+  if (node.scoreChange) G.score += node.scoreChange;
+  if (node.itemsGain)   G.items.push(...node.itemsGain);
+
+  // Vocab tracking
+  if (node.vocab && !G.wordsLearned.find(w => w.word === node.vocab)) {
+    const v = VOCAB[node.vocab];
+    if (v) G.wordsLearned.push({ word: node.vocab, def: v.def });
+  }
+
+  // HP death check
+  if (G.hp <= 0 && !node.isEnding) {
+    G.hp = 0; updateHUD();
+    go('end_eaten'); return;
+  }
+
+  updateHUD();
+  if (node.chapter) $('chapter-display').textContent = node.chapter;
+
+  if (node.isEnding) renderEnding(node);
+  else               renderNode(node);
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ─── NODE RENDERING ────────────────────────────────────────
+function renderNode(node) {
+  const paras = Array.isArray(node.text)
+    ? node.text.map(t => `<p>${t}</p>`).join('')
+    : `<p>${node.text}</p>`;
+
+  const vocabBox = node.vocab && VOCAB[node.vocab] ? (() => {
+    const v = VOCAB[node.vocab];
+    return `<div class="vocab-box">
+      <div class="vocab-word">📖 ${node.vocab}</div>
+      <div class="vocab-def">${v.def}</div>
+      <div class="vocab-example">"${v.ex}"</div>
+    </div>`;
+  })() : '';
+
+  const itemBox = node.itemsGain ? `<div class="item-gain">
+    <div class="item-gain-label">🎒 FOUND:</div>
+    <div class="item-gain-list">${node.itemsGain.join(' &nbsp;·&nbsp; ')}</div>
+  </div>` : '';
+
+  const hpChip = node.hpChange
+    ? `<span class="stat-chip ${node.hpChange < 0 ? 'chip-neg' : 'chip-pos'}">${node.hpChange > 0 ? '+' : ''}${node.hpChange} HP</span>`
+    : '';
+
+  const buttons = (node.choices || []).map((c, i) => {
+    const cls = c.spell ? 'choice-spell' : 'choice-free';
+    const badge = c.spell
+      ? `<span class="badge">SPELL: ${c.spell}</span>`
+      : `<span class="badge">FREE</span>`;
+    return `<button class="${cls} choice-btn" onclick="handleChoice(${i})">${c.text}${badge}</button>`;
+  }).join('');
+
+  $('game-area').innerHTML = `
+    <div class="scene-card">
+      <div class="scene-header">
+        <div class="scene-emoji">${node.emoji || '🌿'}</div>
+        <div class="scene-title-wrap">
+          <div class="scene-title">${node.title}${hpChip}</div>
+          ${node.chapter ? `<div class="scene-chapter">${node.chapter}</div>` : ''}
+        </div>
+      </div>
+      <div class="scene-body">${paras}${vocabBox}${itemBox}</div>
+      ${buttons ? `<div class="choices-wrap"><div class="choices-label">What do you do?</div>${buttons}</div>` : ''}
+    </div>`;
+}
+
+// ─── CHOICE HANDLER ────────────────────────────────────────
+function handleChoice(i) {
+  const choice = NODES[G.node].choices[i];
+  if (choice.spell) openSpell(choice);
+  else if (choice.dice) rollDice(choice);
+  else go(choice.successNode);
+}
+
+// ─── SPELLING ──────────────────────────────────────────────
+function openSpell(choice) {
+  PS = { choice, tries: 0 };
+  const v = VOCAB[choice.spell] || {};
+
+  $('s-ctx').textContent  = choice.spellCtx || '';
+  $('s-word').textContent = choice.spell;
+  $('s-def').textContent  = '"' + (v.def || '') + '"';
+  $('s-hint').textContent = hintText(choice.spell);
+  $('s-hint').style.display = 'none';
+  $('s-tries').textContent = '';
+  $('s-result').className = 'spell-result';
+  $('s-result').textContent = '';
+  $('s-input').value = '';
+  $('s-input').className = 'spell-input';
+  $('s-skip').style.display = 'none';
+  $('s-btn').textContent = 'SUBMIT ➤';
+  $('s-btn').onclick = submitSpell;
+
+  $('spell-overlay').classList.add('active');
+  setTimeout(() => $('s-input').focus(), 120);
+}
+
+function hintText(word) {
+  const blanks = word.split('').map((c, i) => i < 2 ? c : '_').join(' ');
+  return `${word.length} letters · starts "${word.slice(0,2)}" · ${blanks}`;
+}
+
+function toggleHint() {
+  const h = $('s-hint');
+  h.style.display = h.style.display === 'none' ? 'block' : 'none';
+}
+
+function submitSpell() {
+  const typed = $('s-input').value.trim().toUpperCase();
+  const target = PS.choice.spell;
+  const correct = typed === target;
+  const inp = $('s-input');
+  const res = $('s-result');
+
+  if (correct) {
+    inp.classList.add('correct');
+    res.className = 'spell-result show ok';
+    res.textContent = '✅ CORRECT! Brilliant spelling!';
+    flash('CORRECT! +25', 'ok');
+    G.score += 25;
+    if (!G.wordsSpelled.includes(target)) G.wordsSpelled.push(target);
+    if (!G.wordsLearned.find(w => w.word === target)) {
+      const v = VOCAB[target];
+      if (v) G.wordsLearned.push({ word: target, def: v.def });
+    }
+    updateHUD();
+    $('s-btn').textContent = 'CONTINUE ➤';
+    $('s-btn').onclick = () => {
+      $('spell-overlay').classList.remove('active');
+      const c = PS.choice;
+      if (c.dice) rollDice({ ...c, successNode: c.successNode });
+      else go(c.successNode);
+    };
+  } else {
+    PS.tries++;
+    inp.classList.add('wrong');
+    res.className = 'spell-result show bad';
+
+    const triesLeft = 3 - PS.tries;
+    res.textContent = triesLeft > 0
+      ? `❌ Not quite — ${triesLeft} tr${triesLeft === 1 ? 'y' : 'ies'} left! ${PS.choice.failText || ''}`
+      : `❌ Not to worry — ${PS.choice.failText || 'you\'ll take the other path!'}`;
+
+    $('s-tries').textContent = `Attempts: ${PS.tries}`;
+
+    setTimeout(() => {
+      inp.classList.remove('wrong');
+      inp.value = '';
+    }, 600);
+
+    if (PS.tries >= 3) {
+      $('s-btn').textContent = 'CONTINUE →';
+      $('s-btn').onclick = skipSpell;
+      $('s-skip').style.display = 'none';
+    } else if (PS.tries >= 1) {
+      $('s-skip').style.display = 'block';
+    }
+  }
+}
+
+function skipSpell() {
+  $('spell-overlay').classList.remove('active');
+  const old = document.getElementById('give-up-extra');
+  if (old) old.remove();
+  go(PS.choice.failNode);
+}
+
+// ─── DICE ──────────────────────────────────────────────────
+const FACES = ['⚀','⚁','⚂','⚃','⚄','⚅'];
+
+function rollDice(choice) {
+  $('dice-overlay').classList.add('active');
+  const face = $('dice-face');
+  const msg  = $('dice-msg');
+  face.style.animation = 'none';
+  face.offsetHeight;
+  face.style.animation = '';
+
+  let t = 0;
+  const iv = setInterval(() => {
+    face.textContent = FACES[Math.floor(Math.random() * 6)];
+    if (++t > 18) {
+      clearInterval(iv);
+      const roll = Math.floor(Math.random() * 6) + 1;
+      face.textContent = FACES[roll - 1];
+      const good = roll >= 4;
+      if (good) {
+        msg.style.color = '#69f0ae';
+        msg.textContent = `🎲 You rolled ${roll}! ${choice.diceGoodText || 'Nice!'}`;
+        $('dice-cont').onclick = () => { $('dice-overlay').classList.remove('active'); go(choice.diceGoodNode || choice.successNode); };
+      } else {
+        if (choice.diceBadHp) { G.hp = Math.max(0, G.hp + choice.diceBadHp); updateHUD(); }
+        msg.style.color = '#ff5252';
+        msg.textContent = `🎲 You rolled ${roll}... ${choice.diceBadText || 'Bad luck!'}`;
+        $('dice-cont').onclick = () => { $('dice-overlay').classList.remove('active'); go(choice.diceBadNode || choice.successNode); };
+      }
+    }
+  }, 75);
+}
+
+// ─── ENDINGS ───────────────────────────────────────────────
+function renderEnding(node) {
+  G.score += (node.scoreBonus || 0);
+  updateHUD();
+
+  const paras = node.text.split('\n\n').filter(Boolean).map(p => `<p>${p}</p>`).join('');
+
+  const wordsPanel = G.wordsLearned.length > 0 ? `
+    <div class="words-panel">
+      <h3>📚 WORDS YOU ENCOUNTERED</h3>
+      ${G.wordsLearned.map(w => `
+        <div class="word-row">
+          <span class="wr-word">${w.word}</span>
+          <span class="wr-def">${w.def}</span>
+        </div>`).join('')}
+    </div>` : '';
+
+  const spelledLine = G.wordsSpelled.length > 0 ? `
+    <div class="spelled-line">
+      ✅ Correctly spelled: <strong>${G.wordsSpelled.join(', ')}</strong>
+    </div>` : '';
+
+  $('game-area').innerHTML = `
+    <div class="scene-card">
+      <div class="scene-body">
+        <div class="ending-wrap">
+          <div class="ending-big-emoji">${node.emoji}</div>
+          <div class="ending-title ${node.type}">${node.title}</div>
+          <div class="ending-body">${paras}</div>
+          <div class="final-score">FINAL SCORE: ${G.score} ⭐</div>
+          ${spelledLine}
+          ${wordsPanel}
+          <button class="restart-btn" onclick="restart()">🔄 PLAY AGAIN!</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+// ─── RESTART ───────────────────────────────────────────────
+function restart() {
+  G.hp = 100; G.score = 0; G.items = []; G.node = 'start';
+  G.wordsLearned = []; G.wordsSpelled = []; G.spellTries = 0;
+  $('spell-overlay').classList.remove('active');
+  $('dice-overlay').classList.remove('active');
+  updateHUD();
+  go('start');
+}
+
+// ─── KEYBOARD ──────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if ($('spell-overlay').classList.contains('active') && e.key === 'Enter') {
+    submitSpell();
+  }
+});
+
+// ─── BOOT ──────────────────────────────────────────────────
+updateHUD();
+go('start');
+</script>
+</body>
+</html>
